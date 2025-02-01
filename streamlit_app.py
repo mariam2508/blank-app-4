@@ -30,8 +30,7 @@ def predict(image):
     
     img_array = preprocess_image(image)
     prediction = model.predict(img_array)[0][0]  # Extract prediction value
-    result = "Histopathological" if prediction < 0.5 else "Other"
-    return result, prediction  # Return both class and confidence score
+    return "Histopathological" if prediction < 0.5 else "Other"
 
 # Initialize session state for page navigation
 if 'page' not in st.session_state:
@@ -71,20 +70,13 @@ elif st.session_state.page == "predict":
                 st.error("⚠️ Model not loaded. Please check the model file.")
             else:
                 with st.spinner("⏳ Predicting..."):
-                    result, confidence = predict(uploaded_file)
+                    result = predict(uploaded_file)
                     st.success(f"✅ Prediction: **{result}**")
-                    st.info(f"🔢 Confidence Score: {confidence:.4f}")
 
     # Back button to return to the home page
     if st.button("⬅️ Back to Home"):
         st.session_state.page = "home"
         st.rerun()
-
-# Footer
-st.markdown("---")
-st.markdown("### 📌 About")
-st.markdown("This app classifies histopathology images using a deep learning model. 🚀")
-st.markdown("**Note:** The model is trained to distinguish images as either **'Histopathological'** or **'Other'**.")
 
 # Custom CSS for better UI
 st.markdown(
