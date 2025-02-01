@@ -9,11 +9,12 @@ st.title("Histopathology Image Classification")
 
 # Load the trained model
 model_path = 'histopathology_model.h5'
+model = None
 if os.path.exists(model_path):
     model = tf.keras.models.load_model(model_path)
-    st.sidebar.success("Model loaded successfully!")
+    st.sidebar.success("✅ Model loaded successfully!")
 else:
-    st.sidebar.error("Model file not found. Please ensure 'histopathology_model.h5' is available.")
+    st.sidebar.error("❌ Model file not found. Please ensure 'histopathology_model.h5' is available.")
 
 # Function to preprocess the image
 def preprocess_image(image):
@@ -24,10 +25,13 @@ def preprocess_image(image):
 
 # Function to make predictions
 def predict(image):
+    if model is None:
+        return "Error: Model not loaded"
+    
     img_array = preprocess_image(image)
-    prediction = model.predict(img_array)
+    prediction = model.predict(img_array)[0][0]  # Extract prediction value
     result = "Histopathological" if prediction < 0.5 else "Other"
-    return result
+    return result, prediction  # Return both class and confidence score
 
 # Initialize session state for page navigation
 if 'page' not in st.session_state:
@@ -35,50 +39,54 @@ if 'page' not in st.session_state:
 
 # Home Page
 if st.session_state.page == "home":
-    st.markdown("### Welcome to the Histopathology Image Classification App!")
+    st.markdown("### Welcome to the Histopathology Image Classification App! 🎯")
     st.markdown("""
-    This app uses a deep learning model to classify histopathology images into two categories:
-    - **Histopathological**: Images that show signs of histopathological conditions.
-    - **Other**: Images that do not show signs of histopathological conditions.
+    This app classifies histopathology images into two categories:
+    - 🏥 **Histopathological**: Images showing signs of histopathological conditions.
+    - 📷 **Other**: Images without signs of histopathological conditions.
 
-    **How to use:**
-    1. Click the "Next" button below to proceed to the prediction page.
-    2. Upload an image (JPG, JPEG, or PNG) and click the "Predict" button to see the result.
+    **Instructions:**
+    1. Click the **"Next"** button to proceed to the prediction page.
+    2. Upload an image (JPG, JPEG, or PNG) and click **"Predict"** to see the result.
     """)
 
-    if st.button("Next"):
+    if st.button("Next ➡️"):
         st.session_state.page = "predict"
-        st.experimental_rerun()
+        st.rerun()
 
 # Prediction Page
 elif st.session_state.page == "predict":
-    st.markdown("### Predict Histopathology Image")
-    st.markdown("Upload an image to classify it as Histopathological or Other.")
+    st.markdown("### 🔍 Predict Histopathology Image")
+    st.markdown("Upload an image to classify it as **Histopathological** or **Other**.")
 
     # Upload image
-    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.file_uploader("📂 Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
         # Display the uploaded image
-        st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+        st.image(uploaded_file, caption="🖼️ Uploaded Image", use_column_width=True)
 
         # Make prediction
-        if st.button("Predict"):
-            with st.spinner("Predicting..."):
-                result = predict(uploaded_file)
-                st.success(f"Prediction: {result}")
+        if st.button("🚀 Predict"):
+            if model is None:
+                st.error("⚠️ Model not loaded. Please check the model file.")
+            else:
+                with st.spinner("⏳ Predicting..."):
+                    result, confidence = predict(uploaded_file)
+                    st.success(f"✅ Prediction: **{result}**")
+                    st.info(f"🔢 Confidence Score: {confidence:.4f}")
 
     # Back button to return to the home page
-    if st.button("Back to Home"):
+    if st.button("⬅️ Back to Home"):
         st.session_state.page = "home"
-        st.experimental_rerun()
+        st.rerun()
 
 # Footer
 st.markdown("---")
-st.markdown("### About")
-st.markdown("This app uses a deep learning model to classify histopathology images.")
-st.markdown("**Note:** The model is trained to classify images as either 'Histopathological' or 'Other'.")
+st.markdown("### 📌 About")
+st.markdown("This app classifies histopathology images using a deep learning model. 🚀")
+st.markdown("**Note:** The model is trained to distinguish images as either **'Histopathological'** or **'Other'**.")
 
-# Custom CSS for better design
+# Custom CSS for better UI
 st.markdown(
     """
     <style>
@@ -89,6 +97,7 @@ st.markdown(
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        font-weight: bold;
     }
     .stButton>button:hover {
         background-color: #45a049;
